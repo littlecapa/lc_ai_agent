@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenAI Dashboard</title>
+    <style>
+        body { font-family: sans-serif; padding: 2rem; }
+        table { border-collapse: collapse; width: 300px; }
+        td, th { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <h1>🔐 OpenAI Dashboard</h1>
+    {% if balance.error %}
+        <p style="color:red;">Error: {{ balance.error }}</p>
+    {% else %}
+        <table>
+            <tr><th>Metric</th><th>Value (USD)</th></tr>
+            <tr><td>Used</td><td>{{ balance.used_usd }}</td></tr>
+            <tr><td>Remaining</td><td>{{ balance.remaining_usd }}</td></tr>
+            <tr><td>Limit</td><td>{{ balance.hard_limit_usd }}</td></tr>
+        </table>
+    {% endif %}
+</body>
+</html>

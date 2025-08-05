@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ask AI</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+        .left, .right {
+            width: 50%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .left {
+            border-right: 1px solid #ccc;
+        }
+        textarea, input, select, button {
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 8px;
+            font-size: 14px;
+        }
+        textarea {
+            resize: vertical;
+        }
+        #result {
+            height: 100px;
+            max-height: 100px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+        #log {
+            height: 100%;
+            overflow-y: scroll;
+            background: #f0f0f0;
+            padding: 10px;
+            border: 1px solid #aaa;
+            white-space: pre-wrap;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        .button-group button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+<div class="left">
+    <label for="model">Model:</label>
+    <select id="model">
+        <option value="gpt-4o">gpt-4o</option>
+        <option value="gpt-4">gpt-4</option>
+        <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+    </select>
+
+    <label for="temperature">Temperature:</label>
+    <input type="number" id="temperature" step="0.01" value="0.7" min="0" max="1">
+
+    <label for="content">System Content:</label>
+    <textarea id="content" rows="3"></textarea>
+
+    <label for="input">Prompt (max 1024 chars):</label>
+    <textarea id="input" rows="5" maxlength="1024"></textarea>
+
+    <div class="button-group">
+        <button onclick="clearFields()">Clear</button>
+        <button onclick="submitForm()">Submit</button>
+    </div>
+
+    <label for="result">Result:</label>
+    <div id="result"></div>
+</div>
+<div class="right">
+    <div id="log"></div>
+</div>
+
+<script>
+    function clearFields() {
+        document.getElementById("content").value = "";
+        document.getElementById("input").value = "";
+        document.getElementById("result").innerText = "";
+    }
+
+    async function submitForm() {
+        const model = document.getElementById("model").value;
+        const temperature = parseFloat(document.getElementById("temperature").value);
+        const content = document.getElementById("content").value;
+        const input = document.getElementById("input").value;
+
+        const response = await ask_ai(model, temperature, content, input);
+
+        document.getElementById("result").innerText = response;
+
+        const logEntry = `---\nModel: ${model}\nTemperature: ${temperature}\nSystem: ${content}\nPrompt: ${input}\nResult: ${response}\n\n`;
+        const log = document.getElementById("log");
+        log.innerText = logEntry + log.innerText;
+    }
+
+    async function ask_ai(model, temperature, content, input) {
+        try {
+            const response = await fetch("/api/ask/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ model, temperature, content, input })
+            });
+            const data = await response.json();
+            return data.result || "No result returned.";
+        } catch (err) {
+            return "Error: " + err.message;
+        }
+    }
+</script>
+</body>
+</html>
