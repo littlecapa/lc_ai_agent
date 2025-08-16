@@ -1,7 +1,8 @@
 from django.http import JsonResponse
 from django.views import View
 from django.conf import settings
-from core.llm.openai_llm import OpenAILLM
+from core.llm.openai_llm import OpenAILLM # Annahme, dass dies vorhanden ist
+from core.libs.gmail_processor import run_email_automation
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -51,3 +52,62 @@ def ask_ai_view(request):
     else:
         logger.error("ask_ai_view received non-POST request")
         return JsonResponse({"error": "Only POST method allowed."}, status=405)
+    
+def process_emails_view(request):
+    """
+    Rendert das Formular zum Verarbeiten von E-Mails
+    und führt das Skript bei POST-Anfrage aus.
+    """
+    # Standardwerte für die Formularfelder
+    default_gmail_user = "littlecapa@googlemail.com"
+    default_source_folder = "Aktien"
+    default_target_folder = "Archive_Aktien"
+    # Achtung: Pfad an dein System anpassen!
+    default_save_path = "/Volumes/Data/DataLake/Finance/Test" 
+
+    context = {
+        'gmail_user': default_gmail_user,
+        'source_folder': default_source_folder,
+        'target_folder': default_target_folder,
+        'save_path': default_save_path,
+        'message': None, # Für Erfolgs- oder Fehlermeldungen
+        'success': False, # Status der Operation
+    }
+
+    if request.method == 'POST':
+        # Parameter aus dem Formular holen
+        gmail_user = request.POST.get('gmail_user')
+        gmail_password = request.POST.get('gmail_password')
+        source_folder = request.POST.get('source_folder')
+        target_folder = request.POST.get('target_folder')
+        save_path = request.POST.get('save_path')
+
+        # Die eingegebenen Werte werden immer in den Kontext gesetzt, 
+        # damit sie im Formular wieder angezeigt werden (außer dem Passwort).
+        context['gmail_user'] = gmail_user
+        context['source_folder'] = source_folder
+        context['target_folder'] = target_folder
+        context['save_path'] = save_path
+
+        # Überprüfe, ob alle notwendigen Felder ausgefüllt sind
+        if not all([gmail_user, gmail_password, source_folder, target_folder, save_path]):
+            context['message'] = "Bitte füllen Sie alle Felder aus."
+            context['success'] = False
+        else:
+            try:
+                # Rufe das Python-Skript auf. Es gibt jetzt (True/False, Nachricht) zurück.
+                success, message = run_email_automation(
+                    gmail_user, gmail_password, source_folder, target_folder, save_path
+                )
+                context['message'] = message
+                context['success'] = success
+
+            except Exception as e:
+                # Dies fängt jede Exception ab, die von run_email_automation geworfen wird.
+                # run_email_automation selbst fängt GMAIL_LIB_EXCEPTIONs ab und gibt (False, message) zurück,
+                # aber für den Fall, dass ein unerwarteter Fehler durchschlägt, fangen wir ihn hier ab.
+                logger.error(f"Unerwarteter Fehler in process_emails_view: {e}", exc_info=True)
+                context['message'] = f"Ein unerwarteter Fehler ist aufgetreten: {e}"
+                context['success'] = False
+    
+    return render(request, 'get_emails.html', context)
