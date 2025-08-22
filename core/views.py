@@ -3,11 +3,11 @@ from django.views import View
 from django.conf import settings
 from core.llm.openai_llm import OpenAILLM # Annahme, dass dies vorhanden ist
 from core.libs.gmail_processor import run_email_automation
+from core.libs.teams_processor import run_channel_automation
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import json
-
+from .models import Category, Page
 import logging
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,8 @@ def ask_ai_view(request):
     else:
         logger.error("ask_ai_view received non-POST request")
         return JsonResponse({"error": "Only POST method allowed."}, status=405)
-    
+
+@csrf_protect
 def process_emails_view(request):
     """
     Rendert das Formular zum Verarbeiten von E-Mails
@@ -111,3 +112,112 @@ def process_emails_view(request):
                 context['success'] = False
     
     return render(request, 'get_emails.html', context)
+
+@csrf_protect
+def process_channels_view(request):
+    """
+    Rendert das Formular zum Verarbeiten von Teams-Channels
+    und führt den Teams-Extractor bei POST-Anfrage aus.
+
+    Erwartete Felder (alle vorhanden, Validierung je nach Modus):
+      - tenant_id (required)
+      - client_id (required)
+      - client_secret (optional; required wenn use_device_code=False)
+      - team (Name oder GUID; required)
+      - channel (Name oder GUID; required)
+      - save_path (required)
+      - use_device_code (Checkbox -> True/False)
+    """
+    # Standardwerte für die Formularfelder
+    default_tenant_id = ""
+    default_client_id = ""
+    default_team = "Mein Team"
+    default_channel = "xyz"
+    default_save_path = "/Volumes/Data/DataLake/Finance/TeamsExport"
+
+    context = {
+        "tenant_id": default_tenant_id,
+        "client_id": default_client_id,
+        "team": default_team,
+        "channel": default_channel,
+        "save_path": default_save_path,
+        "use_device_code": True,  # Default: Device Code Flow
+        "message": None,
+        "success": False,
+    }
+
+    if request.method == "POST":
+        # Parameter aus dem Formular holen
+        tenant_id = (request.POST.get("tenant_id") or "").strip()
+        client_id = (request.POST.get("client_id") or "").strip()
+        client_secret = (request.POST.get("client_secret") or None)
+        team = (request.POST.get("team") or "").strip()
+        channel = (request.POST.get("channel") or "").strip()
+        save_path = (request.POST.get("save_path") or "").strip()
+
+        # Checkbox: wenn nicht gesetzt, liefert POST kein Feld -> False
+        raw_flag = (request.POST.get("use_device_code") or "").lower()
+        use_device_code = raw_flag in ("1", "true", "on", "yes")
+
+        # Eingegebene Werte (ohne Secret) wieder in den Kontext
+        context.update({
+            "tenant_id": tenant_id,
+            "client_id": client_id,
+            "team": team,
+            "channel": channel,
+            "save_path": save_path,
+            "use_device_code": use_device_code,
+        })
+
+        # Validierung
+        missing_base = [
+            name for name, val in (
+                ("tenant_id", tenant_id),
+                ("client_id", client_id),
+                ("team", team),
+                ("channel", channel),
+                ("save_path", save_path),
+            ) if not val
+        ]
+        if missing_base:
+            context["message"] = f"Bitte füllen Sie alle Pflichtfelder aus: {', '.join(missing_base)}."
+            context["success"] = False
+            return render(request, "get_channels.html", context)
+
+        if not use_device_code and not client_secret:
+            context["message"] = "Wenn Device Code deaktiviert ist, muss ein Client Secret angegeben werden."
+            context["success"] = False
+            return render(request, "get_channels.html", context)
+
+        # Ausführung
+        try:
+            logger.info("Starte run_channel_automation für Team '%s' / Channel '%s' (DeviceCode=%s)", team, channel, use_device_code)
+            success, message = run_channel_automation(
+                tenant_id=tenant_id,
+                client_id=client_id,
+                client_secret=client_secret,
+                team_name_or_id=team,
+                channel_name_or_id=channel,
+                save_path=save_path,
+                use_device_code=use_device_code,
+            )
+            context["message"] = message
+            context["success"] = success
+        except Exception as e:
+            logger.error("Unerwarteter Fehler in process_channels_view: %s", e, exc_info=True)
+            context["message"] = f"Ein unerwarteter Fehler ist aufgetreten: {e}"
+            context["success"] = False
+
+    return render(request, "get_channels.html", context)
+
+def bookmark_list_view(request):
+    """
+    Zeigt alle Lesezeichen an, gruppiert nach Kategorien und sortiert nach Priorität.
+    """
+    # Rufe alle Kategorien ab und lade die zugehörigen Seiten effizient
+    categories = Category.objects.order_by('priority').prefetch_related('pages').all()
+    
+    context = {
+        'categories': categories
+    }
+    return render(request, 'bookmarks_list.html', context)

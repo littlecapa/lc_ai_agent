@@ -1,0 +1,129 @@
+<!-- myproject/myapp/templates/bookmarks_list.html -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meine Bookmarks</title>
+    <!-- CSS aus styles.css wird hier eingebettet, um externe Abhängigkeiten zu vermeiden -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        #bookmark-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .category-section {
+            grid-column: 1 / -1; /* Nimmt die volle Breite im Grid ein */
+        }
+
+        .category-section h2 {
+            text-align: center;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .bookmark-tile {
+            /* Hintergrundfarbe auf das neue Dunkelblau geändert */
+            background-color: #2A4365; /* Mittelblau, etwas heller als zuvor */
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            text-decoration: none;
+            /* Schriftfarbe auf Weiß geändert */
+            color: #ffffff; 
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 150px;
+        }
+
+        .bookmark-tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .tile-icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 10px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .tile-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin: 0;
+            /* Schriftfarbe ist jetzt weiß durch .bookmark-tile */
+        }
+
+        .tile-description {
+            font-size: 0.9em;
+            /* Kontrastreiche Farbe für die Beschreibung, da Hauptfarbe jetzt weiß ist */
+            color: #cbd5e0; /* Hellgrau, z.B. Tailwind-Farbe gray-300, für guten Kontrast auf Dunkelblau */
+            margin-top: 5px;
+        }
+
+        .error-message {
+            display: none; /* In diesem Template nicht direkt verwendet, da Fehler über Django-Nachrichten gehandhabt werden */
+            padding: 15px;
+            margin: 20px auto;
+            background-color: #ffcccc;
+            border: 1px solid #ff0000;
+            border-radius: 8px;
+            color: #cc0000;
+            font-weight: bold;
+            text-align: center;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Meine Bookmarks</h1>
+    </header>
+
+    <main id="bookmark-container">
+        {% for category in categories %}
+            <div class="category-section">
+                <h2>{{ category.name }}</h2>
+            </div>
+            {% for page in category.pages.all %}
+                <a href="{{ page.url }}" class="bookmark-tile" target="_blank">
+                    {% if page.icon %}
+                        <div class="tile-icon" style="background-image: url('{{ page.icon }}');"></div>
+                    {% endif %}
+                    <p class="tile-title">{{ page.title }}</p>
+                    {% if page.description %}
+                        <p class="tile-description">{{ page.description }}</p>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        {% empty %}
+            <p class="text-center text-gray-600 col-span-full">Noch keine Lesezeichen vorhanden.</p>
+        {% endfor %}
+    </main>
+
+</body>
+</html>
