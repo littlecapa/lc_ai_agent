@@ -176,5 +176,6 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_API_BASE = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
 OPENAI_MODEL_DEFAULT = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o")
 OPENAI_MODEL_FINANCE = os.getenv("OPENAI_MODEL_FINANCE", "gpt-4o")
+GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD')
 
 OPENAI_LLM = None

@@ -7,7 +7,8 @@ from core.libs.teams_processor import run_channel_automation
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import json
-from .models import Category, Page
+from .models import Category, Page, gmailShareConfig
+import os
 import logging
 
 logger = logging.getLogger(__name__)
@@ -55,22 +56,19 @@ def ask_ai_view(request):
 
 @csrf_protect
 def process_emails_view(request):
+    config = gmailShareConfig.objects.first()
+    logging.debug(f"Using gmailShareConfig: {config}")
+    
     """
     Rendert das Formular zum Verarbeiten von E-Mails
     und führt das Skript bei POST-Anfrage aus.
     """
-    # Standardwerte für die Formularfelder
-    default_gmail_user = "littlecapa@googlemail.com"
-    default_source_folder = "Aktien"
-    default_target_folder = "Archive_Aktien"
-    # Achtung: Pfad an dein System anpassen!
-    default_save_path = "/Volumes/Data/DataLake/Finance/Test" 
-
     context = {
-        'gmail_user': default_gmail_user,
-        'source_folder': default_source_folder,
-        'target_folder': default_target_folder,
-        'save_path': default_save_path,
+        'gmail_user': config.gmail_user,
+        'source_folder': config.source_folder,
+        'target_folder': config.target_folder,
+        'save_path': config.save_path,
+        'gmail_password': settings.GMAIL_PASSWORD,
         'message': None, # Für Erfolgs- oder Fehlermeldungen
         'success': False, # Status der Operation
     }
@@ -89,6 +87,7 @@ def process_emails_view(request):
         context['source_folder'] = source_folder
         context['target_folder'] = target_folder
         context['save_path'] = save_path
+        context['gmail_password'] = gmail_password
 
         # Überprüfe, ob alle notwendigen Felder ausgefüllt sind
         if not all([gmail_user, gmail_password, source_folder, target_folder, save_path]):

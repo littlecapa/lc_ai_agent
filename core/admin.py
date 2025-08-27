@@ -1,7 +1,7 @@
 # myproject/myapp/admin.py
 
 from django.contrib import admin
-from .models import Category, Page # Importiere deine Models
+from .models import Category, Page, gmailShareConfig # Importiere deine Models
 
 # Registriere das Category Model
 @admin.register(Category)
@@ -21,3 +21,5 @@ class PageAdmin(admin.ModelAdmin):
     # Dadurch kannst du Pages direkt beim Bearbeiten einer Kategorie hinzufügen/ändern
     # Inlines werden oft in der CategoryAdmin-Klasse verwendet, aber zur Vereinfachung hier separat gezeigt.
     # Für Inlines in CategoryAdmin, siehe den optionalen Abschnitt unten.
+
+admin.site.register(gmailShareConfig)
