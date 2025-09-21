@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.views import View
+from django.views.generic import TemplateView
 from django.conf import settings
 from core.llm.openai_llm import OpenAILLM # Annahme, dass dies vorhanden ist
 from core.libs.gmail_processor import run_email_automation
@@ -12,6 +13,75 @@ import os
 import logging
 
 logger = logging.getLogger(__name__)
+
+class HomeView(TemplateView):
+    """
+    Homepage mit Übersicht und Navigation
+    """
+    template_name = 'home.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Dynamisches Menü definieren
+        context['menu_items'] = self.get_menu_items()
+        
+        
+        # URL für die Grafik (anpassbar)
+        context['chart_url'] = self.get_chart_url()
+        
+        return context
+    
+    def get_menu_items(self):
+        """
+        Dynamisches Menü basierend auf Ihrer Liste
+        """
+        # Ihre Menü-Daten
+        menu = [
+            ("Dashboard", "/", "fas fa-home"),
+            ("Bookmarks", "bookmarks/", "fas fa-bookmark"), 
+            ("Ask AI", "ask/", "fas fa-robot"),
+            ("E-Mails verarbeiten", "get_emails/", "fas fa-envelope"),
+        ]
+        
+        # Menü-Items mit aktueller URL vergleichen
+        current_path = self.request.path
+        menu_items = []
+        
+        for item in menu:
+            if len(item) == 3:
+                name, url, icon = item
+            else:
+                # Fallback falls nur Name und URL gegeben sind
+                name, url = item[:2]
+                icon = "fas fa-circle"
+            
+            # Vollständige URL erstellen (relativ zur App)
+            if not url.startswith('/'):
+                full_url = f"/{url}" if url != "/" else "/"
+            else:
+                full_url = url
+            
+            # Prüfen ob aktueller Menüpunkt aktiv ist
+            is_active = (current_path == full_url) or (url != "/" and current_path.startswith(f"/{url}"))
+            
+            menu_items.append({
+                'name': name,
+                'url': full_url,
+                'icon': icon,
+                'is_active': is_active
+            })
+        
+        return menu_items
+    
+    def get_chart_url(self):
+        """
+        Hier können Sie Ihre Grafik-URL definieren
+        """
+        # Beispiel: Chart.js oder externe API
+        return "https://media.cnn.com/api/v1/images/stellar/prod/230104173032-02-chess-stock.jpg?c=16x9&q=h_653,w_1160,c_fill/f_avif"
+
+
 
 def check_openai_llm():
     if settings.OPENAI_LLM == None:

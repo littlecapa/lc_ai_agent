@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Portfolio Dashboard{% endblock %}
+
+{% block page_title %}
+<i class="fas fa-chart-line me-2"></i>
+Portfolio Dashboard
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Statistik-Karten (nur für eingeloggte User) -->
+    {% if user.is_authenticated %}
+    <div class="col-12 mb-4">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title">{{ total_stocks }}</h4>
+                                <p class="card-text">Aktien im Portfolio</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-briefcase fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title">{{ total_holdings_value|floatformat:2 }}</h4>
+                                <p class="card-text">Gesamt-Anteile</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-coins fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title">{{ active_alarms }}</h4>
+                                <p class="card-text">Aktive Alarme</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-bell fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title">{{ recent_recommendations|length }}</h4>
+                                <p class="card-text">Neue Empfehlungen</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-star fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Portfolio Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="fas fa-chart-area me-2"></i>
+                    Portfolio Übersicht
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if chart_url %}
+                <div class="chart-container" style="position: relative; height: 400px;">
+                    <img src="{{ chart_url }}" alt="Portfolio Chart" class="img-fluid" style="max-height: 100%; width: 100%; object-fit: contain;">
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Chart wird geladen...</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Aktuelle Empfehlungen -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="fas fa-star me-2"></i>
+                    Aktuelle Empfehlungen
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_recommendations %}
+                <div class="list-group list-group-flush">
+                    {% for rec in recent_recommendations %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ rec.stock.symbol }}</h6>
+                                <p class="mb-1 small text-muted">{{ rec.source }}</p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-{% if rec.action == 'buy' or rec.action == 'strong_buy' %}success{% elif rec.action == 'sell' or rec.action == 'strong_sell' %}danger{% else %}secondary{% endif %}">
+                                    {{ rec.get_action_display }}
+                                </span>
+                                {% if rec.target_price %}
+                                <small class="text-muted d-block">{{ rec.target_price }}€</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{% url 'stocks:recommendation_list' %}" class="btn btn-outline-primary btn-sm">
+                        Alle Empfehlungen <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-star fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">Keine Empfehlungen vorhanden</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
