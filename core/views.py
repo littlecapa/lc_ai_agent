@@ -9,6 +9,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import json
 from .models import Category, Page, gmailShareConfig
+from .libs.portfolio_stats import get_stats
 import os
 import logging
 
@@ -25,11 +26,7 @@ class HomeView(TemplateView):
         
         # Dynamisches Menü definieren
         context['menu_items'] = self.get_menu_items()
-        
-        
-        # URL für die Grafik (anpassbar)
-        context['chart_url'] = self.get_chart_url()
-        
+        context.update(get_stats())  
         return context
     
     def get_menu_items(self):
@@ -41,7 +38,7 @@ class HomeView(TemplateView):
             ("Dashboard", "/", "fas fa-home"),
             ("Bookmarks", "bookmarks/", "fas fa-bookmark"), 
             ("Ask AI", "ask/", "fas fa-robot"),
-            ("E-Mails verarbeiten", "get_emails/", "fas fa-envelope"),
+            ("Aktien E-Mails", "get_emails/", "fas fa-envelope"),
         ]
         
         # Menü-Items mit aktueller URL vergleichen
@@ -74,14 +71,6 @@ class HomeView(TemplateView):
         
         return menu_items
     
-    def get_chart_url(self):
-        """
-        Hier können Sie Ihre Grafik-URL definieren
-        """
-        # Beispiel: Chart.js oder externe API
-        return "https://media.cnn.com/api/v1/images/stellar/prod/230104173032-02-chess-stock.jpg?c=16x9&q=h_653,w_1160,c_fill/f_avif"
-
-
 
 def check_openai_llm():
     if settings.OPENAI_LLM == None:

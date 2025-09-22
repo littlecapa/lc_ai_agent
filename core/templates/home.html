@@ -35,7 +35,7 @@ Portfolio Dashboard
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <h4 class="card-title">{{ total_holdings_value|floatformat:2 }}</h4>
+                                <h4 class="card-title">{{ total_holdings_value|floatformat:2 }}€</h4>
                                 <p class="card-text">Gesamt-Anteile</p>
                             </div>
                             <div class="align-self-center">
@@ -51,7 +51,7 @@ Portfolio Dashboard
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <h4 class="card-title">{{ active_alarms }}</h4>
+                                <h4 class="card-title">{{ total_alarms }}</h4>
                                 <p class="card-text">Aktive Alarme</p>
                             </div>
                             <div class="align-self-center">
@@ -91,16 +91,10 @@ Portfolio Dashboard
                 </h5>
             </div>
             <div class="card-body">
-                {% if chart_url %}
-                <div class="chart-container" style="position: relative; height: 400px;">
-                    <img src="{{ chart_url }}" alt="Portfolio Chart" class="img-fluid" style="max-height: 100%; width: 100%; object-fit: contain;">
-                </div>
-                {% else %}
                 <div class="text-center py-5">
                     <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
                     <p class="text-muted">Chart wird geladen...</p>
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>

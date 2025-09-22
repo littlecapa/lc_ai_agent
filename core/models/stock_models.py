@@ -64,6 +64,7 @@ class Holdings(models.Model):
         (3, 'D/EU'),
         (4, 'US Tech'),
         (5, 'World Tech'),
+        (6, 'Compounder'),
         (99, 'Sonstiges'),
     ]
     stock = models.ForeignKey(

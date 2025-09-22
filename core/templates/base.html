@@ -30,14 +30,14 @@
                     </div>
                     
                     <ul class="nav nav-pills flex-column mb-auto">
-                        <li class="nav-item">
-                            <a href="{% url 'home' %}" class="nav-link text-light {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                                <i class="fas fa-home me-2"></i>
-                                Dashboard
-                            </a>
-                        </li>
-                        
-                
+                        {% for item in menu_items %}
+                            <li class="nav-item">
+                                <a href="{{ item.url }}" class="nav-link text-light {% if item.is_active %}active{% endif %}">
+                                    <i class="{{ item.icon }} me-2"></i>
+                                    {{ item.name }}
+                                </a>
+                            </li>
+                        {% endfor %}
                     </ul>
                     
                     <hr class="text-light">
