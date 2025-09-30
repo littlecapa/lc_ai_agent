@@ -258,11 +258,4 @@ class Recommendation(models.Model):
         ordering = ['-publication_date']
 
     def __str__(self):
-        return f"{self.stock.symbol}: {self.get_action_display()} von {self.source}"
-
-    @property
-    def is_expired(self):
-        """Prüft, ob die Empfehlung abgelaufen ist"""
-        if self.expiry_date:
-            return timezone.now().date() > self.expiry_date
-        return False
+        return f"{self.stock.name}({self.stock.isin}): {self.get_action_display()} von {self.source}"

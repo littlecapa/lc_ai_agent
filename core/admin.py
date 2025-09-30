@@ -27,9 +27,9 @@ class StockAdmin(admin.ModelAdmin):
 
 @admin.register(Holdings)
 class HoldingsAdmin(admin.ModelAdmin):
-    list_display = ['stock_symbol', 'quantity', 'average_purchase_price', 'total_investment_display']
-    list_filter = ['stock__symbol', 'stock__name', 'category']
-    search_fields = ['stock__symbol', 'stock__name']
+    list_display = ['stock_id', 'quantity', 'average_purchase_price', 'total_investment_display']
+    list_filter = ['stock_id', 'category']
+    search_fields = ['isin', 'stock__symbol', 'stock__name']
     readonly_fields = ['created_at', 'updated_at', 'total_investment_display']
     autocomplete_fields = ['stock']  # Für bessere UX bei vielen Aktien
     
@@ -52,9 +52,17 @@ class HoldingsAdmin(admin.ModelAdmin):
 
     def stock_symbol(self, obj):
         return obj.stock.symbol
+    
+    
     stock_symbol.short_description = 'Symbol'
     stock_symbol.admin_order_field = 'stock__symbol'
+    
+    def stock_id(self, obj):
+        return f"{obj.stock.name}({obj.stock.isin})" 
+    stock_id.short_description = 'Symbol'
+    stock_id.admin_order_field = 'stock__name'
 
+    
     def total_investment_display(self, obj):
         total = obj.total_investment
         if total:
@@ -103,7 +111,7 @@ class AlarmAdmin(admin.ModelAdmin):
 
 @admin.register(Recommendation)
 class RecommendationAdmin(admin.ModelAdmin):
-    list_display = ['stock_symbol', 'action', 'source', 'target_price', 'confidence', 'publication_date', 'is_valid']
+    list_display = ['stock_id', 'action', 'source', 'target_price', 'confidence', 'publication_date', 'is_valid']
     list_filter = ['action', 'confidence', 'strategy']
     search_fields = ['stock__symbol', 'stock__name', 'source']
     readonly_fields = ['created_at', 'updated_at']
@@ -115,7 +123,7 @@ class RecommendationAdmin(admin.ModelAdmin):
             'fields': ('stock', 'action', 'target_price', 'confidence', 'strategy')
         }),
         ('Quelle', {
-            'fields': ('source', 'publication_date', 'expiry_date')
+            'fields': ('source', 'publication_date')
         }),
         ('Details', {
             'fields': ('reasoning', 'url', 'is_valid')
@@ -126,10 +134,10 @@ class RecommendationAdmin(admin.ModelAdmin):
         })
     )
 
-    def stock_symbol(self, obj):
-        return obj.stock.symbol
-    stock_symbol.short_description = 'Symbol'
-    stock_symbol.admin_order_field = 'stock__symbol'
+    def stock_id(self, obj):
+        return f"{obj.stock.name}({obj.stock.isin})" 
+    stock_id.short_description = 'Symbol'
+    stock_id.admin_order_field = 'stock__name'
 
     def is_expired_display(self, obj):
         if obj.is_expired:
