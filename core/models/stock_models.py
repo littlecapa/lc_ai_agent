@@ -30,6 +30,10 @@ class Stock(models.Model):
         max_length=200,
         help_text="Vollständiger Name der Aktie/Unternehmens"
     )
+    is_etf = models.BooleanField(
+        default=False,
+        help_text="Ist es ein ETF?"
+    )
     currency = models.CharField(
         max_length=3,
         default='EUR',
@@ -185,6 +189,8 @@ class Recommendation(models.Model):
         ('hold', 'Halten'),
         ('strong_buy', 'Stark Kaufen'),
         ('strong_sell', 'Stark Verkaufen'),
+        ('watch', 'Beobachten'),
+        ('volatile', 'Volatil'),
     ]
 
     CONFIDENCE_CHOICES = [
@@ -259,3 +265,72 @@ class Recommendation(models.Model):
 
     def __str__(self):
         return f"{self.stock.name}({self.stock.isin}): {self.get_action_display()} von {self.source}"
+
+class DecicionLog(models.Model):
+    
+    ACTION_CHOICES = [
+        ('buy', 'Kaufen'),
+        ('sell', 'Verkaufen'),
+        ('hold', 'Halten'),
+         ]
+
+    stock = models.ForeignKey(
+        Stock,
+        on_delete=models.CASCADE,
+        related_name='decicions'
+    )
+    action = models.CharField(
+        max_length=5,
+        choices=ACTION_CHOICES,
+        default='hold',
+        help_text="Empfohlene Aktion"
+    )
+    source = models.CharField(
+        max_length=100,
+        help_text="Quelle der Empfehlung (Analyst, Bank, Website, etc.)",
+        null=True, blank=True,
+    )
+    
+    execution_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        help_text="Kursziel"
+    )
+
+    reasoning = models.TextField(
+        blank=True,
+        help_text="Begründung für die Entscheidung",
+        null=True,
+        default="",
+    )
+
+    next_step_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        help_text="Kursziel"
+    )
+
+    publication_date = models.DateField(
+        help_text="Datum der Veröffentlichung",
+        null=True, blank=True
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Entscheidungsprotokoll"
+        verbose_name_plural = "Entscheidungen"
+        ordering = ['-publication_date']
+
+
+    def __str__(self):
+        return f"{self.stock.name}({self.stock.isin}): {self.get_action_display()} von {self.source}"
+
+

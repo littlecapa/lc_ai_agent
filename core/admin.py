@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import Stock, Holdings, Alarm, Recommendation, Category, Page, gmailShareConfig
+from .models import Stock, Holdings, Alarm, Recommendation, DecicionLog, Category, Page, gmailShareConfig
 
 
 @admin.register(Stock)
@@ -13,7 +13,7 @@ class StockAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at']
     fieldsets = (
         ('Grunddaten', {
-            'fields': ('isin', 'wkn', 'symbol', 'name')
+            'fields': ('isin', 'wkn', 'symbol', 'name', 'is_etf')
         }),
         ('Börsen-Info', {
             'fields': ('currency', 'exchange')
@@ -157,6 +157,33 @@ class RecommendationAdmin(admin.ModelAdmin):
         updated = queryset.update(is_valid=True)
         self.message_user(request, f'{updated} Empfehlungen als gültig markiert.')
     mark_as_valid.short_description = "Als gültig markieren"
+
+@admin.register(DecicionLog)
+class DecicionLogAdmin(admin.ModelAdmin):
+    list_display = ['stock_id', 'action', 'source', 'execution_price', 'next_step_price', 'publication_date']
+    list_filter = ['action']
+    search_fields = ['stock__symbol', 'stock__name', 'source']
+    readonly_fields = ['created_at', 'updated_at']
+    autocomplete_fields = ['stock']
+    date_hierarchy = 'publication_date'
+    
+    fieldsets = (
+        ('Empfehlung', {
+            'fields': ('stock', 'action', 'execution_price', 'next_step_price', 'reasoning',)
+        }),
+        ('Quelle', {
+            'fields': ('source', 'publication_date')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+
+    def stock_id(self, obj):
+        return f"{obj.stock.name}({obj.stock.isin})" 
+    stock_id.short_description = 'Symbol'
+    stock_id.admin_order_field = 'stock__name'
 
 # Registriere das Category Model
 @admin.register(Category)
