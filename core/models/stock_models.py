@@ -120,6 +120,49 @@ class Holdings(models.Model):
             return self.quantity * self.average_purchase_price
         return None
 
+class SavingPlan(models.Model):
+    """
+    Schwellwerte für Aktien mit Benachrichtigungen
+    """
+    
+    stock = models.ForeignKey(
+        Stock,
+        on_delete=models.CASCADE,
+        related_name='saving_plans'
+    )
+    amount = models.DecimalField(
+        max_digits=6    ,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        help_text="Höhe des Sparplans"
+    )
+    FREQUENCY_CHOICES = [
+        (1, 'Weekly'),
+        (2, 'Monthly'),
+        (3, 'Quarterly'),
+    ]
+    frequency = models.IntegerField(
+        choices=FREQUENCY_CHOICES,
+        default=FREQUENCY_CHOICES[1][0], # Standardmäßig 'Monthly' (2)
+        null=True,
+        blank=True,
+        help_text="Ausführungsintervall des Sparplans  "
+    )
+    start_date = models.DateField(
+        help_text="Startdatum des Sparplans",
+    )
+    is_active = models.BooleanField(
+        default=True, 
+        null=True,
+    )
+    #is_active = models.BooleanField(
+    #    default=True,
+    #    help_text="Sparplan ist aktiv"
+    #)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class Alarm(models.Model):
     """

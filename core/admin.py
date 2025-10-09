@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import Stock, Holdings, Alarm, Recommendation, DecicionLog, Category, Page, gmailShareConfig
+from .models import Stock, Holdings, Alarm, SavingPlan, Recommendation, DecicionLog, Category, Page, gmailShareConfig
 
 
 @admin.register(Stock)
@@ -70,6 +70,28 @@ class HoldingsAdmin(admin.ModelAdmin):
         return "-"
     total_investment_display.short_description = 'Gesamtinvestition'
 
+@admin.register(SavingPlan)
+class SavingPlanAdmin(admin.ModelAdmin):
+    list_display = ['stock_symbol', 'is_active']
+    list_filter = ['stock__symbol', 'stock__name', 'is_active']
+    search_fields = ['stock__symbol']
+    readonly_fields = ['created_at', 'updated_at']
+    autocomplete_fields = ['stock']
+    
+    fieldsets = (
+        ('Sparplan-Einstellungen', {
+            'fields': ('stock', 'amount', 'frequency', 'start_date', 'is_active', 'notes')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+
+    def stock_symbol(self, obj):
+        return obj.stock.symbol
+    stock_symbol.short_description = 'Symbol'
+    stock_symbol.admin_order_field = 'stock__symbol'
 
 @admin.register(Alarm)
 class AlarmAdmin(admin.ModelAdmin):
